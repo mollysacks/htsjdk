@@ -140,33 +140,34 @@ public class SamInputResource {
     }
 
     /**
-     * Creates a {@link SamInputResource} with no index from a URI which may represent an htsget path,
+     * Creates a {@link SamInputResource} with no index from an IOPath which may represent an htsget path,
      * or some other resource such as a filesystem path or a URL,
      * with no index, and with a wrapper to apply to the SeekableByteChannel for custom prefetching/buffering.
      *
      * This method will first attempt to treat the resource as an htsget resource, then fall back to
      * treating it as a file system path, then as a URL
+     *
      */
-    // TODO: this method can likely be replaced by one taking an HtsPath once this interface is available, see https://github.com/samtools/htsjdk/pull/1496
+    //TODO this should also work with SRA ( maybe sra://accession" or something like that )
     public static SamInputResource of(final IOPath ioPath, final Function<SeekableByteChannel, SeekableByteChannel> wrapper) {
         // See if this is an Htsget source first
         if (ioPath.getScheme().equalsIgnoreCase(HtsgetBAMFileReader.HTSGET_SCHEME)) {
             return new SamInputResource(new HtsgetInputResource(ioPath));
         }
-        // Check if this URI represents a path we can open
-        try {
-            final Path path = IOUtil.getPath(ioPath.toString());
-            return wrapper == null
-                ? of(path)
-                : of(path, wrapper);
-        } catch (final ProviderNotFoundException | IOException e) {
+        // Check if this IOPath can be represented as a Path
+       if(ioPath.isPath()) {
+           final Path path = ioPath.toPath();
+           return wrapper == null
+                   ? of(path)
+                   : of(path, wrapper);
+       } else {
             // If this URI cannot be opened as a path, try treating it as a URL
             try {
                 return new SamInputResource(new UrlInputResource(ioPath.getURI().toURL()));
             } catch (final MalformedURLException malformedURLException) {
                 throw new RuntimeIOException("URI could not be interpreted as any known input resource type", malformedURLException);
             }
-        }
+       }
     }
 
     /** Creates a {@link SamInputResource} from a string specifying *either* a url or a file path */
@@ -597,14 +598,36 @@ class SRAInputResource extends InputResource {
 class HtsgetInputResource extends InputResource {
 
     private final IOPath path;
+    private final boolean allowInsecureHttpAccess;
 
     public HtsgetInputResource(final IOPath path) {
+        this(path, false);
+    }
+
+    /**
+     * @param path an IOPath with an htsget URI i.e. htsget://servername/sampleid
+     * @param allowInsecureHttpAccess If we should attempt to fallback to http if https access is not successful.
+     *                                This is intended for testing and shouldn't be used with real data)
+     */
+    public HtsgetInputResource(final IOPath path, final boolean allowInsecureHttpAccess){
         super(Type.HTSGET);
+        if(path == null) {
+            throw new IllegalArgumentException("Path cannot be null.");
+        }
+        if( path.getScheme().equals(HtsgetBAMFileReader.HTSGET_SCHEME)){
+            throw new IllegalArgumentException("Expected a uri with the scheme " +HtsgetBAMFileReader.HTSGET_SCHEME +
+                    ":// but found "+  path.getRawInputString() + " instead .");
+        }
         this.path = path;
+        this.allowInsecureHttpAccess = allowInsecureHttpAccess;
     }
 
     IOPath asIOPath(){
         return path;
+    }
+
+    boolean allowInsecureHttpAccess() {
+        return allowInsecureHttpAccess;
     }
 
     @Override
