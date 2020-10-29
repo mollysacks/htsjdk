@@ -288,7 +288,7 @@ public class SamReaderFactoryTest extends HtsjdkTest {
                     throw new RuntimeIOException(e);
                 }
             case HTSGET:
-                return new HtsgetInputResource(new HtsPath(HtsgetBAMFileReaderTest.HTSGET_ENDPOINT + HtsgetBAMFileReaderTest.LOCAL_PREFIX + f.getName()));
+                return new HtsgetInputResource(new HtsPath(HtsgetBAMFileReaderTest.HTSGET_ENDPOINT + HtsgetBAMFileReaderTest.LOCAL_PREFIX + f.getName()), true);
             default:
                 throw new IllegalStateException();
         }
@@ -354,7 +354,7 @@ public class SamReaderFactoryTest extends HtsjdkTest {
 
     @Test(dataProvider = "URIFallbackProvider")
     public void testOpenURIFallback(final IOPath uri, final InputResource.Type type) {
-        final SamInputResource resource = SamInputResource.of(uri);
+        final SamInputResource resource = SamInputResource.of(uri, null, true);
         Assert.assertEquals(resource.data().type(), type);
     }
 

@@ -116,7 +116,7 @@ public class HtsgetBAMFileReader extends SamReader.ReaderImplementation {
     /**
      * Prepare to read BAM from a htsget source
      *
-     * @param source               source of bytes.
+     * @param source               http(s) URI of htsget resource including ID.
      * @param eagerDecode          if true, decode all BAM fields as reading rather than lazily.
      * @param validationStringency Controls how to handle invalidate reads or header lines.
      * @param samRecordFactory     SAM record factory

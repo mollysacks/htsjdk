@@ -14,7 +14,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 public class HtsgetBAMFileReaderTest extends HtsjdkTest {
-    public static final String HTSGET_ENDPOINT = "http://127.0.0.1:3000/reads/";
+    public static final String HTSGET_ENDPOINT = "htsget://127.0.0.1:3000/reads/";
     public static final String LOCAL_PREFIX = "htsjdk_test.";
 
     private final static URI htsgetBAM = URI.create(HTSGET_ENDPOINT + LOCAL_PREFIX + "index_test.bam");
